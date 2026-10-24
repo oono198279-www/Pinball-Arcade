@@ -76,7 +76,7 @@
     const prefs={mode:storage.get('nebula-mode','one'),sound:storage.get('nebula-sound',true),volume:storage.get('nebula-volume',.75)};
     let high=storage.get('nebula-high',0),score=0,balls=3,multiplier=1,state='ready',last=performance.now(),acc=0,shake=0,flash=0,idle=0,launchPower=0,combo=0,comboTimer=0,bonusPulse=0,callout='';
     const input={left:false,right:false};
-    const ball={x:530,y:820,vx:0,vy:0,r:11,active:false,trail:[]};
+    const ball={x:530,y:625,vx:0,vy:0,r:11,active:false,trail:[]};
     const stars=Array.from({length:85},(_,i)=>({x:(i*137.5)%W,y:(i*83.7)%H,r:.5+(i%3)*.45,a:.22+(i%5)*.1}));
     const bumpers=[{x:215,y:265,r:48,c:'#19dfff',v:350},{x:388,y:270,r:48,c:'#19dfff',v:350},{x:303,y:390,r:52,c:'#ff43d4',v:500}];
     const miniBumpers=[{x:180,y:185,r:26,c:'#13d8ff',v:200,biasX:120,label:'MINI POP'},{x:420,y:185,r:26,c:'#ff43d4',v:200,biasX:-120,label:'MINI POP'}];
@@ -95,8 +95,12 @@
       {side:'right',points:[[497,520],[460,714],[432,754]],face:[479,553,440,688],cooldown:0,c:'#ff43d4'}
     ];
     const lowerGuides=[
-      {segments:[[140,714,158,770],[158,770,146,780]],c:'#13d8ff'},
-      {segments:[[460,714,442,770],[442,770,454,780]],c:'#ff43d4'}
+      {segments:[[140,714,158,770]],c:'#13d8ff'},
+      {segments:[[460,714,442,770]],c:'#ff43d4'}
+    ];
+    const outlaneGuides=[
+      {segment:[86,650,146,780],c:'#13d8ff'},
+      {segment:[514,650,454,780],c:'#ff43d4'}
     ];
     const rollovers=[{x:210,y:172,r:13,on:0},{x:300,y:160,r:13,on:0},{x:390,y:172,r:13,on:0}];
     const spinner={x:300,y:220,r:22,a:0,speed:0,cooldown:0};
@@ -122,9 +126,9 @@
     function message(title,sub='',ms=0){ui.message.querySelector('.message-title').textContent=title;ui.message.querySelector('.message-sub').textContent=sub;ui.message.classList.add('show');if(ms)setTimeout(()=>ui.message.classList.remove('show'),ms)}
     function addScore(n){score+=n*multiplier;if(score>high){high=score;storage.set('nebula-high',high)}updateHUD()}
     function scoreHit(base,label){combo=comboTimer>0?Math.min(8,combo+1):1;comboTimer=2.1;const extra=combo>1?combo*25:0;addScore(base+extra);if(combo>=3){callout=`${combo} HIT COMBO +${extra}`;bonusPulse=.75;if(combo===3||combo===6)audio.tone(880,.13,'square',.07,360)}else if(label){callout=label;bonusPulse=.28}}
-    function resetBall(){ball.x=530;ball.y=820;ball.vx=0;ball.vy=0;ball.active=false;ball.trail.length=0;launchGate.open=0;launchGate.hold=0;idle=0;state='ready';message(balls===3&&score===0?'READY':'BALL '+(4-balls),'SPACE / LAUNCH で発射',1400)}
+    function resetBall(){ball.x=530;ball.y=625;ball.vx=0;ball.vy=0;ball.active=false;ball.trail.length=0;launchGate.open=0;launchGate.hold=0;idle=0;state='ready';message(balls===3&&score===0?'READY':'BALL '+(4-balls),'SPACE / LAUNCH で発射',1400)}
     function newGame(){score=0;balls=3;multiplier=1;combo=0;comboTimer=0;targets.forEach(t=>t.down=0);standups.forEach(t=>t.lit=0);rollovers.forEach(r=>r.on=0);bonusLamps.forEach(l=>l.on=0);resetBall();updateHUD()}
-    function launch(){audio.unlock();if(state==='gameover'){newGame();return}if(!ball.active){ball.active=true;state='playing';ball.vx=-38+(Math.random()-.5)*70;ball.vy=-950-Math.random()*80-launchPower;launchPower=0;ui.message.classList.remove('show');audio.tone(130,.2,'sawtooth',.09,500)}}
+    function launch(){audio.unlock();if(state==='gameover'){newGame();return}if(!ball.active){ball.active=true;state='playing';ball.vx=0;ball.vy=-925-launchPower;launchPower=0;ui.message.classList.remove('show');audio.tone(130,.2,'sawtooth',.09,500)}}
     function loseBall(){if(state!=='playing')return;ball.active=false;balls--;audio.tone(180,.5,'sawtooth',.05,-120);updateHUD();if(balls<=0){state='gameover';message('GAME OVER','SCORE '+score.toLocaleString()+' — LAUNCHでリスタート');storage.set('nebula-high',high)}else{setTimeout(resetBall,700)}}
     function closestPoint(ax,ay,bx,by,px,py){const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy||1)));return{x:ax+dx*t,y:ay+dy*t,t}}
     function collideSegment(ax,ay,bx,by,restitution=.82,kick=0,railR=3){const q=closestPoint(ax,ay,bx,by,ball.x,ball.y),dx=ball.x-q.x,dy=ball.y-q.y,d=Math.hypot(dx,dy),min=ball.r+railR;if(d>=min||d===0)return false;const nx=dx/d,ny=dy/d,rel=ball.vx*nx+ball.vy*ny;if(rel<0){ball.x+=nx*(min-d+.3);ball.y+=ny*(min-d+.3);ball.vx-=nx*(1+restitution)*rel;ball.vy-=ny*(1+restitution)*rel;if(kick){ball.vx+=nx*kick;ball.vy+=ny*kick}return true}return false}
@@ -144,6 +148,7 @@
         laneRails.forEach(g=>g.segments.forEach((seg,i)=>{if(i===g.segments.length-1&&ball.y>seg[3]-2)return;collideSegment(...seg,.84,0,5)}));
         gatePhysics(sdt);
         lowerGuides.forEach(g=>g.segments.forEach(seg=>collideSegment(...seg,.83,0,7)));
+        outlaneGuides.forEach(g=>collideSegment(...g.segment,.86,0,6));
         slingshots.forEach(s=>{s.points.forEach((p,i)=>{const n=s.points[(i+1)%s.points.length];collideSegment(p[0],p[1],n[0],n[1],.82,0,2)});if(collideSegment(...s.face,.92,225,4)&&!s.cooldown){s.cooldown=.22;scoreHit(125,'SLINGSHOT');flash=.12;shake=3;audio.tone(s.side==='left'?420:500,.07,'square',.06,140)}});
         bumpers.forEach(b=>collideCircle(b,100));miniBumpers.forEach(b=>collideCircle(b,175));posts.forEach(p=>collideCircle(p,25));kickers.forEach(k=>collideCircle(k,225));
         if(collideCircle(spinner)&&!spinner.cooldown){spinner.speed=Math.min(24,Math.abs(ball.vx+ball.vy)*.025+8);spinner.cooldown=.2;scoreHit(175,'SPINNER');audio.tone(760,.055,'square',.045,260)}
@@ -167,6 +172,7 @@
       laneRails.forEach(g=>g.segments.forEach(seg=>{line(...seg,10,'#0a172a');line(...seg,6,'#a8bdca');line(...seg,2,g.c)}));
       {const a=-1.18*launchGate.open,ex=launchGate.x+Math.cos(a)*launchGate.len,ey=launchGate.y+Math.sin(a)*launchGate.len;ctx.save();ctx.shadowColor=launchGate.hit?'#fff2a8':'#bdefff';ctx.shadowBlur=launchGate.hit?18:7;line(launchGate.x,launchGate.y,ex,ey,8,'#26394a');line(launchGate.x,launchGate.y,ex,ey,4,'#d9edf7');ctx.fillStyle='#f5fbff';ctx.beginPath();ctx.arc(launchGate.x,launchGate.y,5,0,TAU);ctx.fill();ctx.restore()}
       lowerGuides.forEach(g=>g.segments.forEach(seg=>{line(...seg,14,'#0a172a');line(...seg,7,'#96aabd');line(...seg,2,g.c)}));
+      outlaneGuides.forEach(g=>{ctx.save();ctx.shadowColor=g.c;ctx.shadowBlur=8;line(...g.segment,12,'#0a172a');line(...g.segment,7,'#aebfcb');line(...g.segment,2,g.c);ctx.restore()});
       slingshots.forEach(s=>{ctx.save();ctx.shadowColor=s.c;ctx.shadowBlur=s.cooldown?25:10;ctx.beginPath();ctx.moveTo(...s.points[0]);s.points.slice(1).forEach(p=>ctx.lineTo(...p));ctx.closePath();ctx.fillStyle=s.side==='left'?'#08344d99':'#49103f99';ctx.fill();ctx.lineWidth=4;ctx.strokeStyle='#9db7c8';ctx.stroke();line(...s.face,8,s.c);ctx.restore()});
       ctx.save();ctx.shadowColor='#13d8ff';ctx.shadowBlur=20;line(535,180,535,740,12,'#06466d');line(535,180,535,740,3,'#22eaff');ctx.restore();
       ctx.fillStyle='#ffc857';ctx.font='900 20px ui-monospace';ctx.textAlign='center';ctx.fillText('ORBITAL RELAY',300,157);
@@ -197,7 +203,7 @@
     document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{prefs.mode=b.dataset.mode;storage.set('nebula-mode',prefs.mode);input.left=input.right=false;updateHUD()}));document.querySelectorAll('[data-sound]').forEach(b=>b.addEventListener('click',()=>{prefs.sound=b.dataset.sound==='on';storage.set('nebula-sound',prefs.sound);if(prefs.sound){audio.unlock();audio.tone(520,.12,'sine',.1,120)}updateHUD()}));document.querySelectorAll('[data-volume]').forEach(b=>b.addEventListener('click',()=>{prefs.volume=Number(b.dataset.volume);storage.set('nebula-volume',prefs.volume);audio.setVolume(prefs.volume);audio.unlock();audio.tone(620,.12,'sine',.11,100);updateHUD()}));
     document.addEventListener('visibilitychange',()=>{last=performance.now();acc=0;input.left=input.right=false});
     updateHUD();resetBall();requestAnimationFrame(loop);
-    if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=7',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}));
+    if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=8',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}));
     window.__NEBULA_TEST__={getState:()=>({score,high,balls,multiplier,state,ball:{...ball},mode:prefs.mode,sound:prefs.sound}),launch,newGame,setMode:m=>{prefs.mode=m;storage.set('nebula-mode',m);updateHUD()},step:n=>{for(let i=0;i<n;i++)physics(STEP)}};
   })();
   </script>
