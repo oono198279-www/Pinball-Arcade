@@ -94,8 +94,8 @@
       {segments:[[460,714,442,770]],c:'#ff43d4'}
     ];
     const outlaneGuides=[
-      {segment:[86,650,120,780],c:'#13d8ff'},
-      {segment:[514,650,480,780],c:'#ff43d4'}
+      {segment:[84,650,158,798],c:'#13d8ff'},
+      {segment:[516,650,442,798],c:'#ff43d4'}
     ];
     const rollovers=[{x:210,y:172,r:13,on:0},{x:300,y:160,r:13,on:0},{x:390,y:172,r:13,on:0}];
     const spinner={x:300,y:220,r:22,a:0,speed:0,cooldown:0};
@@ -192,7 +192,7 @@
     document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{prefs.mode=b.dataset.mode;storage.set('nebula-mode',prefs.mode);input.left=input.right=false;updateHUD()}));document.querySelectorAll('[data-sound]').forEach(b=>b.addEventListener('click',()=>{prefs.sound=b.dataset.sound==='on';storage.set('nebula-sound',prefs.sound);if(prefs.sound){audio.unlock();audio.tone(520,.12,'sine',.1,120)}updateHUD()}));document.querySelectorAll('[data-volume]').forEach(b=>b.addEventListener('click',()=>{prefs.volume=Number(b.dataset.volume);storage.set('nebula-volume',prefs.volume);audio.setVolume(prefs.volume);audio.unlock();audio.tone(620,.12,'sine',.11,100);updateHUD()}));
     document.addEventListener('visibilitychange',()=>{last=performance.now();acc=0;input.left=input.right=false});
     updateHUD();resetBall();requestAnimationFrame(loop);
-    if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=9',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}));
+    if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=10',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}));
     window.__NEBULA_TEST__={getState:()=>({score,high,balls,multiplier,state,ball:{...ball},mode:prefs.mode,sound:prefs.sound}),launch,newGame,setMode:m=>{prefs.mode=m;storage.set('nebula-mode',m);updateHUD()},step:n=>{for(let i=0;i<n;i++)physics(STEP)}};
   })();
   </script>
