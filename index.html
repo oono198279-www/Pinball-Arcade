@@ -79,15 +79,15 @@
     const ball={x:542,y:820,vx:0,vy:0,r:11,active:false,trail:[]};
     const stars=Array.from({length:85},(_,i)=>({x:(i*137.5)%W,y:(i*83.7)%H,r:.5+(i%3)*.45,a:.22+(i%5)*.1}));
     const bumpers=[{x:215,y:265,r:48,c:'#19dfff',v:350},{x:388,y:270,r:48,c:'#19dfff',v:350},{x:303,y:390,r:52,c:'#ff43d4',v:500}];
-    const miniBumpers=[{x:125,y:205,r:26,c:'#13d8ff',v:250,label:'MINI POP'},{x:475,y:205,r:26,c:'#ff43d4',v:250,label:'MINI POP'}];
+    const miniBumpers=[{x:180,y:185,r:26,c:'#13d8ff',v:210,label:'MINI POP'},{x:420,y:185,r:26,c:'#ff43d4',v:210,label:'MINI POP'}];
     const posts=[{x:115,y:548,r:18},{x:486,y:548,r:18},{x:176,y:650,r:13},{x:424,y:650,r:13},{x:300,y:538,r:19}];
     const targets=[{x:250,y:486,w:28,h:50,down:0},{x:286,y:486,w:28,h:50,down:0},{x:322,y:486,w:28,h:50,down:0}];
     const standups=[{x:112,y:300,w:22,h:44,lit:0,c:'#13d8ff'},{x:466,y:300,w:22,h:44,lit:0,c:'#ff43d4'}];
     const kickers=[{x:150,y:400,r:19,c:'#ffc857',v:430,cooldown:0,label:'KICKER'},{x:450,y:400,r:19,c:'#ffc857',v:430,cooldown:0,label:'KICKER'}];
     const bonusLamps=[{x:165,y:472,r:15,on:0,c:'#13d8ff'},{x:435,y:472,r:15,on:0,c:'#ff43d4'}];
     const laneRails=[
-      {segments:[[102,420,102.5,470],[102.5,470,103,520]],c:'#13d8ff'},
-      {segments:[[498,420,497.5,470],[497.5,470,497,520]],c:'#ff43d4'}
+      {segments:[[97,198,98,300],[98,300,100,410],[100,410,103,520]],c:'#13d8ff'},
+      {segments:[[497,198,497,300],[497,300,497,410],[497,410,497,520]],c:'#ff43d4'}
     ];
     const slingshots=[
       {side:'left',points:[[103,520],[140,714],[168,754]],face:[121,553,160,688],cooldown:0,c:'#13d8ff'},
@@ -123,7 +123,7 @@
     function scoreHit(base,label){combo=comboTimer>0?Math.min(8,combo+1):1;comboTimer=2.1;const extra=combo>1?combo*25:0;addScore(base+extra);if(combo>=3){callout=`${combo} HIT COMBO +${extra}`;bonusPulse=.75;if(combo===3||combo===6)audio.tone(880,.13,'square',.07,360)}else if(label){callout=label;bonusPulse=.28}}
     function resetBall(){ball.x=542;ball.y=820;ball.vx=0;ball.vy=0;ball.active=false;ball.trail.length=0;idle=0;state='ready';message(balls===3&&score===0?'READY':'BALL '+(4-balls),'SPACE / LAUNCH で発射',1400)}
     function newGame(){score=0;balls=3;multiplier=1;combo=0;comboTimer=0;targets.forEach(t=>t.down=0);standups.forEach(t=>t.lit=0);rollovers.forEach(r=>r.on=0);bonusLamps.forEach(l=>l.on=0);resetBall();updateHUD()}
-    function launch(){audio.unlock();if(state==='gameover'){newGame();return}if(!ball.active){ball.active=true;state='playing';ball.vx=-25;ball.vy=-980-launchPower;launchPower=0;ui.message.classList.remove('show');audio.tone(130,.2,'sawtooth',.09,500)}}
+    function launch(){audio.unlock();if(state==='gameover'){newGame();return}if(!ball.active){ball.active=true;state='playing';ball.vx=-38+(Math.random()-.5)*70;ball.vy=-950-Math.random()*80-launchPower;launchPower=0;ui.message.classList.remove('show');audio.tone(130,.2,'sawtooth',.09,500)}}
     function loseBall(){if(state!=='playing')return;ball.active=false;balls--;audio.tone(180,.5,'sawtooth',.05,-120);updateHUD();if(balls<=0){state='gameover';message('GAME OVER','SCORE '+score.toLocaleString()+' — LAUNCHでリスタート');storage.set('nebula-high',high)}else{setTimeout(resetBall,700)}}
     function closestPoint(ax,ay,bx,by,px,py){const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy||1)));return{x:ax+dx*t,y:ay+dy*t,t}}
     function collideSegment(ax,ay,bx,by,restitution=.82,kick=0,railR=3){const q=closestPoint(ax,ay,bx,by,ball.x,ball.y),dx=ball.x-q.x,dy=ball.y-q.y,d=Math.hypot(dx,dy),min=ball.r+railR;if(d>=min||d===0)return false;const nx=dx/d,ny=dy/d,rel=ball.vx*nx+ball.vy*ny;if(rel<30){ball.x+=nx*(min-d+.3);ball.y+=ny*(min-d+.3);ball.vx-=nx*(1+restitution)*rel;ball.vy-=ny*(1+restitution)*rel;if(kick){ball.vx+=nx*kick;ball.vy+=ny*kick}return true}return false}
@@ -194,7 +194,7 @@
     document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{prefs.mode=b.dataset.mode;storage.set('nebula-mode',prefs.mode);input.left=input.right=false;updateHUD()}));document.querySelectorAll('[data-sound]').forEach(b=>b.addEventListener('click',()=>{prefs.sound=b.dataset.sound==='on';storage.set('nebula-sound',prefs.sound);if(prefs.sound){audio.unlock();audio.tone(520,.12,'sine',.1,120)}updateHUD()}));document.querySelectorAll('[data-volume]').forEach(b=>b.addEventListener('click',()=>{prefs.volume=Number(b.dataset.volume);storage.set('nebula-volume',prefs.volume);audio.setVolume(prefs.volume);audio.unlock();audio.tone(620,.12,'sine',.11,100);updateHUD()}));
     document.addEventListener('visibilitychange',()=>{last=performance.now();acc=0;input.left=input.right=false});
     updateHUD();resetBall();requestAnimationFrame(loop);
-    if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=5',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}));
+    if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=6',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}));
     window.__NEBULA_TEST__={getState:()=>({score,high,balls,multiplier,state,ball:{...ball},mode:prefs.mode,sound:prefs.sound}),launch,newGame,setMode:m=>{prefs.mode=m;storage.set('nebula-mode',m);updateHUD()},step:n=>{for(let i=0;i<n;i++)physics(STEP)}};
   })();
   </script>
