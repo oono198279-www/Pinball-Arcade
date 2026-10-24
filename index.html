@@ -86,12 +86,8 @@
     const kickers=[{x:150,y:400,r:19,c:'#ffc857',v:430,cooldown:0,label:'KICKER'},{x:450,y:400,r:19,c:'#ffc857',v:430,cooldown:0,label:'KICKER'}];
     const bonusLamps=[{x:165,y:472,r:15,on:0,c:'#13d8ff'},{x:435,y:472,r:15,on:0,c:'#ff43d4'}];
     const slingshots=[
-      {side:'left',points:[[103,520],[140,714],[168,754]],face:[121,553,160,688],cooldown:0,c:'#13d8ff'},
-      {side:'right',points:[[497,520],[460,714],[432,754]],face:[479,553,440,688],cooldown:0,c:'#ff43d4'}
-    ];
-    const lowerGuides=[
-      {segments:[[140,714,158,770]],c:'#13d8ff'},
-      {segments:[[460,714,442,770]],c:'#ff43d4'}
+      {side:'left',face:[121,553,160,688],cooldown:0,c:'#13d8ff'},
+      {side:'right',face:[479,553,440,688],cooldown:0,c:'#ff43d4'}
     ];
     const outlaneGuides=[
       {segment:[84,650,158,798],c:'#13d8ff'},
@@ -139,9 +135,8 @@
       for(let sub=0;sub<2;sub++){
         const sdt=dt/2;ball.vy+=455*sdt;ball.vx*=.9997;ball.vy*=.9997;ball.x+=ball.vx*sdt;ball.y+=ball.vy*sdt;
         walls.forEach(w=>collideSegment(...w,.78,0,6.5));
-        lowerGuides.forEach(g=>g.segments.forEach(seg=>collideSegment(...seg,.83,0,7)));
         outlaneGuides.forEach(g=>collideSegment(...g.segment,.86,0,6));
-        slingshots.forEach(s=>{s.points.forEach((p,i)=>{const n=s.points[(i+1)%s.points.length];collideSegment(p[0],p[1],n[0],n[1],.82,0,2)});if(collideSegment(...s.face,.92,225,4)&&!s.cooldown){s.cooldown=.22;scoreHit(125,'SLINGSHOT');flash=.12;shake=3;audio.tone(s.side==='left'?420:500,.07,'square',.06,140)}});
+        slingshots.forEach(s=>{if(collideSegment(...s.face,.92,225,4)&&!s.cooldown){s.cooldown=.22;scoreHit(125,'SLINGSHOT');flash=.12;shake=3;audio.tone(s.side==='left'?420:500,.07,'square',.06,140)}});
         bumpers.forEach(b=>collideCircle(b,100));miniBumpers.forEach(b=>collideCircle(b,175));posts.forEach(p=>collideCircle(p,25));kickers.forEach(k=>collideCircle(k,225));
         if(collideCircle(spinner)&&!spinner.cooldown){spinner.speed=Math.min(24,Math.abs(ball.vx+ball.vy)*.025+8);spinner.cooldown=.2;scoreHit(175,'SPINNER');audio.tone(760,.055,'square',.045,260)}
         rollovers.forEach(r=>{if(!r.on&&Math.hypot(ball.x-r.x,ball.y-r.y)<ball.r+r.r){r.on=1.8;scoreHit(150,'ROLLOVER');audio.tone(940,.08,'sine',.055,180);if(rollovers.every(x=>x.on)){multiplier=Math.min(10,multiplier+1);callout='ORBIT LANES COMPLETE';bonusPulse=1;addScore(750)}}});
@@ -161,9 +156,8 @@
     function render(){ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#071842');bg.addColorStop(.52,'#08082b');bg.addColorStop(1,'#030713');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);stars.forEach(s=>{ctx.globalAlpha=s.a;ctx.fillStyle=s.r>1?'#68e8ff':'#fff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,TAU);ctx.fill()});ctx.globalAlpha=1;
       const neb=ctx.createRadialGradient(305,520,20,305,520,310);neb.addColorStop(0,'#ff28c329');neb.addColorStop(.35,'#5526c51d');neb.addColorStop(1,'transparent');ctx.fillStyle=neb;ctx.fillRect(0,130,W,680);
       ctx.lineCap='round';walls.forEach(w=>{line(...w,13,'#091b35');line(...w,7,'#92bad1');line(...w,2,'#effcff')});
-      lowerGuides.forEach(g=>g.segments.forEach(seg=>{line(...seg,14,'#0a172a');line(...seg,7,'#96aabd');line(...seg,2,g.c)}));
       outlaneGuides.forEach(g=>{ctx.save();ctx.shadowColor=g.c;ctx.shadowBlur=8;line(...g.segment,12,'#0a172a');line(...g.segment,7,'#aebfcb');line(...g.segment,2,g.c);ctx.restore()});
-      slingshots.forEach(s=>{ctx.save();ctx.shadowColor=s.c;ctx.shadowBlur=s.cooldown?25:10;ctx.beginPath();ctx.moveTo(...s.points[0]);s.points.slice(1).forEach(p=>ctx.lineTo(...p));ctx.closePath();ctx.fillStyle=s.side==='left'?'#08344d99':'#49103f99';ctx.fill();ctx.lineWidth=4;ctx.strokeStyle='#9db7c8';ctx.stroke();line(...s.face,8,s.c);ctx.restore()});
+      slingshots.forEach(s=>{ctx.save();ctx.shadowColor=s.c;ctx.shadowBlur=s.cooldown?25:10;line(...s.face,13,'#0a172a');line(...s.face,8,'#9db7c8');line(...s.face,4,s.c);ctx.restore()});
       ctx.fillStyle='#ffc857';ctx.font='900 20px ui-monospace';ctx.textAlign='center';ctx.fillText('ORBITAL RELAY',300,157);
       rollovers.forEach((r,i)=>{ctx.save();ctx.shadowColor=r.on?'#ffc857':'#13d8ff';ctx.shadowBlur=r.on?20:7;ctx.fillStyle=r.on?'#ffc857':'#062746';ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,TAU);ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=r.on?'#fff1b8':'#56e8ff';ctx.stroke();ctx.fillStyle='#fff';ctx.font='900 10px ui-monospace';ctx.fillText(String(i+1),r.x,r.y+4);ctx.restore()});
       ctx.save();ctx.translate(spinner.x,spinner.y);ctx.rotate(spinner.a);ctx.shadowColor='#ffc857';ctx.shadowBlur=spinner.speed>1?18:7;ctx.fillStyle='#ffc857';pathRoundRect(-25,-5,50,10,4);ctx.fill();ctx.strokeStyle='#fff0bd';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#18243a';ctx.beginPath();ctx.arc(0,0,5,0,TAU);ctx.fill();ctx.restore();
@@ -192,7 +186,7 @@
     document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{prefs.mode=b.dataset.mode;storage.set('nebula-mode',prefs.mode);input.left=input.right=false;updateHUD()}));document.querySelectorAll('[data-sound]').forEach(b=>b.addEventListener('click',()=>{prefs.sound=b.dataset.sound==='on';storage.set('nebula-sound',prefs.sound);if(prefs.sound){audio.unlock();audio.tone(520,.12,'sine',.1,120)}updateHUD()}));document.querySelectorAll('[data-volume]').forEach(b=>b.addEventListener('click',()=>{prefs.volume=Number(b.dataset.volume);storage.set('nebula-volume',prefs.volume);audio.setVolume(prefs.volume);audio.unlock();audio.tone(620,.12,'sine',.11,100);updateHUD()}));
     document.addEventListener('visibilitychange',()=>{last=performance.now();acc=0;input.left=input.right=false});
     updateHUD();resetBall();requestAnimationFrame(loop);
-    if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=10',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}));
+    if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=11',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{}));
     window.__NEBULA_TEST__={getState:()=>({score,high,balls,multiplier,state,ball:{...ball},mode:prefs.mode,sound:prefs.sound}),launch,newGame,setMode:m=>{prefs.mode=m;storage.set('nebula-mode',m);updateHUD()},step:n=>{for(let i=0;i<n;i++)physics(STEP)}};
   })();
   </script>
